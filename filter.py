@@ -147,13 +147,14 @@ def main():
         except:
             pass
 
+    gist_tweets = []
     if gist_id and github_username:
         try:
             import urllib.request
             gist_url = f"https://gist.githubusercontent.com/{github_username}/{gist_id}/raw/collected.json"
             with urllib.request.urlopen(gist_url, timeout=10) as resp:
-                gist_data = json.loads(resp.read().decode())
-                add_classifications(gist_data, "gist")
+                gist_tweets = json.loads(resp.read().decode())
+                add_classifications(gist_tweets, "gist")
         except Exception as e:
             print(f"Could not fetch gist: {e}")
 
@@ -186,7 +187,14 @@ def main():
 
     if not needs_classification:
         print("No new tweets to classify!")
-        # Still output the file with existing classifications
+        # Include gist tweets not in this run
+        current_keys = set((t.get('handle') or '') + (t.get('text') or '')[:50] for t in tweets)
+        gist_extras = [t for t in gist_tweets if (t.get('handle') or '') + (t.get('text') or '')[:50] not in current_keys]
+        if gist_extras:
+            print(f"Adding {len(gist_extras)} tweets from gist not in this run")
+            tweets.extend(gist_extras)
+        tweets.sort(key=lambda t: t.get('ts', 0), reverse=True)
+        # Output the file with all accumulated tweets
         with open(OUTPUT_PATH, 'w') as f:
             json.dump(tweets, f, indent=2)
         kept_count = len([t for t in tweets if not t.get('_skip', False)])
@@ -217,8 +225,15 @@ def main():
             if not skip:
                 kept_count += 1
 
-    # Combine: newly classified + already classified
+    # Combine: newly classified + already classified from this run
     all_results = new_results + already_classified
+
+    # Also include gist tweets that weren't in this run (to accumulate everything)
+    current_keys = set((t.get('handle') or '') + (t.get('text') or '')[:50] for t in all_results)
+    gist_extras = [t for t in gist_tweets if (t.get('handle') or '') + (t.get('text') or '')[:50] not in current_keys]
+    if gist_extras:
+        print(f"Adding {len(gist_extras)} tweets from gist not in this run")
+        all_results.extend(gist_extras)
 
     # Sort by timestamp (newest first)
     all_results.sort(key=lambda t: t.get('ts', 0), reverse=True)
