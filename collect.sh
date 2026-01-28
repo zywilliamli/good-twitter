@@ -256,14 +256,68 @@ FILTEREDEOF
             fi
         fi
 
-        # Sync to gist for mobile access (use filtered data if available)
-        if [ -n "$GIST_ID" ]; then
+        # Sync to gist for mobile access (merge with existing gist data)
+        if [ -n "$GIST_ID" ] && [ -n "$GITHUB_USERNAME" ]; then
             echo "Syncing to gist..."
+
+            # Determine which local file to use
             if [ -f "$DATA_DIR/filtered.json" ] && [ "$FILTER" = true ]; then
-                gh gist edit "$GIST_ID" -f collected.json "$DATA_DIR/filtered.json" 2>/dev/null || echo "Gist sync failed (optional)"
+                LOCAL_DATA="$DATA_DIR/filtered.json"
             else
-                gh gist edit "$GIST_ID" -f collected.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+                LOCAL_DATA="$OUTPUT_PATH"
             fi
+
+            # Fetch existing gist data and merge
+            GIST_URL="https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/collected.json"
+            EXISTING_DATA=$(curl -s "$GIST_URL" 2>/dev/null || echo "[]")
+
+            # Merge using Python (dedup by handle + text[:50])
+            MERGED_FILE="$DATA_DIR/_merged_gist.json"
+            python3 << PYEOF
+import json
+import sys
+
+try:
+    with open('$LOCAL_DATA') as f:
+        new_tweets = json.load(f)
+except:
+    new_tweets = []
+
+try:
+    existing = json.loads('''$EXISTING_DATA''')
+    if not isinstance(existing, list):
+        existing = []
+except:
+    existing = []
+
+# Merge: new tweets take precedence, dedup by handle + text[:50]
+seen = set()
+merged = []
+
+for t in new_tweets:
+    key = (t.get('handle') or '') + (t.get('text') or '')[:50]
+    if key not in seen:
+        seen.add(key)
+        merged.append(t)
+
+for t in existing:
+    key = (t.get('handle') or '') + (t.get('text') or '')[:50]
+    if key not in seen:
+        seen.add(key)
+        merged.append(t)
+
+# Sort by timestamp (newest first)
+merged.sort(key=lambda t: t.get('ts', 0), reverse=True)
+
+with open('$MERGED_FILE', 'w') as f:
+    json.dump(merged, f)
+
+print(f"Merged: {len(new_tweets)} new + {len(existing)} existing = {len(merged)} total")
+PYEOF
+
+            # Upload merged data
+            gh gist edit "$GIST_ID" -f collected.json "$MERGED_FILE" 2>/dev/null || echo "Gist sync failed (optional)"
+            rm -f "$MERGED_FILE"
         fi
 
         echo "Opening reader..."
