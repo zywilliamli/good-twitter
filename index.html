@@ -648,6 +648,7 @@
           <div class="stats" id="stats">NO RECORDS LOADED</div>
         </div>
         <div class="header-btns">
+          <button class="header-btn" id="sync-btn">Sync</button>
           <button class="header-btn" id="prompt-btn">Prompt</button>
           <button class="header-btn hidden" id="skipped-btn">Skipped (0)</button>
         </div>
@@ -1033,6 +1034,32 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
     document.getElementById('reset-prompt').addEventListener('click', () => {
       document.getElementById('prompt-textarea').value = DEFAULT_PROMPT;
       localStorage.setItem('filterPrompt', DEFAULT_PROMPT);
+    });
+
+    // Sync from gist
+    const GIST_ID = 'dc06a3ab6e0b1405bc67c0cc797e1613';
+    document.getElementById('sync-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('sync-btn');
+      btn.textContent = 'Syncing...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(`https://gist.githubusercontent.com/zywilliamli/${GIST_ID}/raw/tweets.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const tweets = await res.json();
+        if (Array.isArray(tweets) && tweets.length > 0) {
+          loadTweets(tweets, true);
+          btn.textContent = `Synced ${tweets.length}`;
+        } else {
+          btn.textContent = 'No tweets';
+        }
+      } catch(e) {
+        console.error('Sync failed:', e);
+        btn.textContent = 'Sync failed';
+      }
+      setTimeout(() => {
+        btn.textContent = 'Sync';
+        btn.disabled = false;
+      }, 2000);
     });
 
     // Load saved tweets

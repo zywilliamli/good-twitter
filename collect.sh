@@ -245,6 +245,11 @@ FILTEREDEOF
             fi
         fi
 
+        # Sync to gist for mobile access
+        GIST_ID="dc06a3ab6e0b1405bc67c0cc797e1613"
+        echo "Syncing to gist..."
+        gh gist edit "$GIST_ID" -f tweets.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+
         echo "Opening reader..."
         open "$DATA_DIR/loader.html"
 
