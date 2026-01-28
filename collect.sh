@@ -353,11 +353,15 @@ PYEOF
             rm -f "$MERGED_FILE"
         fi
 
-        echo "Opening reader..."
-        open "$DATA_DIR/loader.html"
-
-        sleep 2
-        rm -f "$DATA_DIR/loader.html"
+        # Only open reader if not running scheduled (avoid interrupting user)
+        if [ "$1" != "--scheduled" ]; then
+            echo "Opening reader..."
+            open "$DATA_DIR/loader.html"
+            sleep 2
+            rm -f "$DATA_DIR/loader.html"
+        else
+            echo "Scheduled run complete (skipping reader open)"
+        fi
 
         exit 0
     fi
