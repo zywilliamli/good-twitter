@@ -59,8 +59,21 @@ cat > "$TEMP_JS" << JSEOF
       return now - ms;
     }
     // Try to parse as date (e.g., "Jan 15" or "Jan 15, 2024")
-    var parsed = Date.parse(timeStr);
-    if (!isNaN(parsed)) return parsed;
+    // If no year present, add current year
+    var currentYear = new Date(now).getFullYear();
+    var withYear = timeStr;
+    // Check if string has a year (4 digits)
+    if (!/[0-9]{4}/.test(timeStr)) {
+      withYear = timeStr + ', ' + currentYear;
+    }
+    var parsed = Date.parse(withYear);
+    if (!isNaN(parsed)) {
+      // If parsed date is in the future, it's probably from last year
+      if (parsed > now) {
+        parsed = Date.parse(timeStr + ', ' + (currentYear - 1));
+      }
+      return parsed;
+    }
     return now;
   }
 
