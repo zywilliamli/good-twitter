@@ -20,13 +20,13 @@ OUTPUT_PATH = DATA_DIR / "filtered.json"
 CLASSIFICATION_PROMPT = """Classify this tweet for a technical reader. Return JSON only.
 
 SKIP (skip: true) if: engagement bait, SaaS spam, generic AI hype, pile-on takes, crypto/web3, viral RT with no context, personal life updates, jokes without substance
-KEEP (skip: false) if: articles, papers, GitHub links, researcher insights, technical content, novel analysis, interesting news
+KEEP (skip: false) if: articles, papers, GitHub links, researcher insights, technical content, novel analysis, interesting news, linked interviews, meditation or personal insights
 
 Author: @{handle} ({name})
 Content: {text}
 Links: {links}
 
-Return ONLY valid JSON: {{"skip": bool, "quality": "high"/"medium"/"low", "topic": "short_slug", "summary": "one sentence"}}"""
+Return ONLY valid JSON: {{"skip": bool, "skip_reason": "reason if skipping", "quality": "high"/"medium"/"low", "topic": "short_slug", "summary": "one sentence"}}"""
 
 
 def classify_tweet(client: Anthropic, tweet: dict, max_retries: int = 3) -> dict:
