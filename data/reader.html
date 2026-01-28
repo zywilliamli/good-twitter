@@ -121,6 +121,13 @@
       display: none;
     }
 
+    .header-btn.icon-btn {
+      font-weight: bold;
+      font-size: 14px;
+      padding: 4px 8px;
+      min-width: 28px;
+    }
+
     .feed-tabs {
       display: flex;
       gap: 0;
@@ -766,6 +773,12 @@
         -webkit-tap-highlight-color: transparent;
       }
 
+      .header-btn.icon-btn {
+        font-size: 16px;
+        padding: 8px 12px;
+        min-width: 36px;
+      }
+
       .tweet, .slop-tweet {
         padding: 14px;
         margin-bottom: 10px;
@@ -916,17 +929,17 @@
     <div class="feed-container" id="feed-container">
       <div class="header">
         <div>
-          <h1>> Feed <span class="cursor"></span></h1>
+          <h1>> Tweets <span class="cursor"></span></h1>
           <div class="stats" id="stats">NO RECORDS LOADED</div>
         </div>
         <div class="header-btns">
           <div class="feed-tabs hidden" id="feed-tabs">
-            <button class="feed-tab active" id="good-tab">Good</button>
-            <button class="feed-tab slop" id="slop-tab">Slop</button>
+            <button class="feed-tab active" id="good-tab">[+]</button>
+            <button class="feed-tab slop" id="slop-tab">[-]</button>
           </div>
-          <button class="header-btn" id="sync-btn">Sync</button>
+          <button class="header-btn icon-btn" id="sync-btn" title="Sync">~</button>
           <button class="header-btn" id="prompt-btn">Prompt</button>
-          <button class="header-btn" id="settings-btn">Settings</button>
+          <button class="header-btn icon-btn" id="settings-btn" title="Settings">*</button>
         </div>
       </div>
       <div id="feed">
@@ -1075,8 +1088,8 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       // Show tabs only if we have skipped tweets
       if (skippedTweets.length > 0) {
         feedTabs.classList.remove('hidden');
-        goodTab.textContent = `Good (${keptTweets.length})`;
-        slopTab.textContent = `Slop (${skippedTweets.length})`;
+        goodTab.textContent = `[+] ${keptTweets.length}`;
+        slopTab.textContent = `[-] ${skippedTweets.length}`;
       } else {
         feedTabs.classList.add('hidden');
       }
