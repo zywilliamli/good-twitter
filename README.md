@@ -33,6 +33,27 @@ A tool to collect tweets from your Twitter/X feed and filter them using Claude H
    chmod +x collect.sh
    ```
 
+5. **(Optional) Set up mobile sync:**
+
+   To view tweets on your phone, create a secret GitHub Gist for syncing:
+
+   a. Go to https://gist.github.com and create a new **secret** gist (don't check "Create public gist")
+   b. Add any placeholder content and save
+   c. Copy the gist ID from the URL (the part after `gist.github.com/yourusername/`)
+   d. Create config files:
+
+   ```bash
+   # Shell config (for collect.sh)
+   cp config.example.sh config.sh
+   # Edit config.sh and add your GIST_ID and GITHUB_USERNAME
+
+   # JS config (for reader.html)
+   cp data/config.example.js data/config.js
+   # Edit data/config.js with the same values
+   ```
+
+   Now when you run `./collect.sh -f`, tweets will sync to your gist. Open the reader on your phone and tap "Sync" to pull them.
+
 ## Usage
 
 ### Basic Collection

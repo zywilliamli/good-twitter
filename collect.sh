@@ -7,6 +7,11 @@ DATA_DIR="$SCRIPT_DIR/data"
 READER_PATH="$DATA_DIR/reader.html"
 OUTPUT_PATH="$DATA_DIR/collected.json"
 
+# Load config if exists
+if [ -f "$SCRIPT_DIR/config.sh" ]; then
+    source "$SCRIPT_DIR/config.sh"
+fi
+
 # Parse args
 TARGET=200
 FILTER=false
@@ -239,12 +244,13 @@ FILTEREDEOF
         fi
 
         # Sync to gist for mobile access (use filtered data if available)
-        GIST_ID="dc06a3ab6e0b1405bc67c0cc797e1613"
-        echo "Syncing to gist..."
-        if [ -f "$DATA_DIR/filtered.json" ] && [ "$FILTER" = true ]; then
-            gh gist edit "$GIST_ID" -f collected.json "$DATA_DIR/filtered.json" 2>/dev/null || echo "Gist sync failed (optional)"
-        else
-            gh gist edit "$GIST_ID" -f collected.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+        if [ -n "$GIST_ID" ]; then
+            echo "Syncing to gist..."
+            if [ -f "$DATA_DIR/filtered.json" ] && [ "$FILTER" = true ]; then
+                gh gist edit "$GIST_ID" -f collected.json "$DATA_DIR/filtered.json" 2>/dev/null || echo "Gist sync failed (optional)"
+            else
+                gh gist edit "$GIST_ID" -f collected.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+            fi
         fi
 
         echo "Opening reader..."

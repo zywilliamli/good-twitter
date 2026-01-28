@@ -719,6 +719,7 @@
     }
 
   </style>
+  <script src="config.js"></script>
 </head>
 <body>
   <div class="overlay" id="overlay"></div>
@@ -1158,13 +1159,17 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
     });
 
     // Sync from gist
-    const GIST_ID = 'dc06a3ab6e0b1405bc67c0cc797e1613';
-    document.getElementById('sync-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('sync-btn');
+    const config = window.TWITTER_DIGEST_CONFIG || {};
+    const syncBtn = document.getElementById('sync-btn');
+    if (!config.GIST_ID || !config.GITHUB_USERNAME) {
+      syncBtn.style.display = 'none';
+    }
+    syncBtn.addEventListener('click', async () => {
+      const btn = syncBtn;
       btn.textContent = 'Syncing...';
       btn.disabled = true;
       try {
-        const res = await fetch(`https://gist.githubusercontent.com/zywilliamli/${GIST_ID}/raw/collected.json?t=${Date.now()}`);
+        const res = await fetch(`https://gist.githubusercontent.com/${config.GITHUB_USERNAME}/${config.GIST_ID}/raw/collected.json?t=${Date.now()}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const tweets = await res.json();
         if (Array.isArray(tweets) && tweets.length > 0) {
