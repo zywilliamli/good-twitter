@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Feed</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -595,6 +599,123 @@
       margin-top: 6px;
       padding-left: 8px;
       border-left: 2px solid rgba(115, 89, 64, 0.2);
+    }
+
+    /* Mobile styles */
+    @media (max-width: 600px) {
+      body {
+        font-size: 15px;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      .feed-container {
+        padding: 0 12px;
+        max-width: 100%;
+      }
+
+      .header {
+        padding: 12px 0;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .header h1 {
+        font-size: 16px;
+      }
+
+      .header-btns {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .header-btn {
+        font-size: 13px;
+        padding: 8px 14px;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .tweet, .skipped-tweet {
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+
+      .tweet-header {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .name {
+        font-size: 14px;
+      }
+
+      .handle {
+        font-size: 13px;
+      }
+
+      .time {
+        font-size: 12px;
+        width: 100%;
+        margin-top: 2px;
+      }
+
+      .tweet-link {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      .tweet {
+        position: relative;
+      }
+
+      .text {
+        font-size: 15px;
+        line-height: 1.5;
+        margin-top: 10px;
+      }
+
+      .media {
+        max-width: 100%;
+      }
+
+      .links a {
+        font-size: 13px;
+        padding: 8px 10px;
+      }
+
+      /* Panels go full width on mobile */
+      .prompt-panel, .skipped-panel {
+        width: 100%;
+        left: -100%;
+        right: -100%;
+      }
+
+      .prompt-panel.open {
+        left: 0;
+      }
+
+      .skipped-panel.open {
+        right: 0;
+      }
+
+      .prompt-textarea {
+        font-size: 14px;
+      }
+
+      .empty h2 {
+        font-size: 14px;
+      }
+
+      .empty p, .box {
+        font-size: 14px;
+      }
+
+      /* Hide scanlines on mobile for performance */
+      body::before {
+        display: none;
+      }
     }
 
   </style>
