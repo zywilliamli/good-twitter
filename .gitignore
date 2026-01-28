@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+
+# Data files (user-specific)
+data/collected.json
+data/filtered.json
+data/tweets.db
+data/timeline.json
+data/timeline_clean.json
+data/_collector.js
+
+# Editor
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+
+# Digests (generated)
+digests/
+
+# macOS
+.DS_Store
