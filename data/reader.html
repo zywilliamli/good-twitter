@@ -806,10 +806,15 @@
       }
 
       /* Panels go full width on mobile */
-      .prompt-panel, .skipped-panel, .settings-panel {
+      .prompt-panel, .settings-panel {
         width: 100%;
         left: -100%;
+      }
+
+      .skipped-panel {
+        width: 100%;
         right: -100%;
+        left: auto;
       }
 
       .settings-panel.open {
