@@ -1314,7 +1314,16 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
     closePrompt.addEventListener('click', closeAllPanels);
     closeSkipped.addEventListener('click', closeAllPanels);
     closeSettings.addEventListener('click', closeAllPanels);
-    overlay.addEventListener('click', closeAllPanels);
+    overlay.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPanels();
+    });
+    overlay.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllPanels();
+    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeAllPanels();
