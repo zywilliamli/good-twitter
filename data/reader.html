@@ -825,8 +825,8 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
         })];
       }
 
-      // Sort by collection order
-      tweets.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+      // Sort by tweet time (newest first)
+      tweets.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
       // Store raw tweets for re-filtering
       allTweets = tweets.map(t => {

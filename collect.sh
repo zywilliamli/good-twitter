@@ -35,7 +35,30 @@ cat > "$TEMP_JS" << JSEOF
   window.T = new Map();
   var TARGET = ${TARGET};
 
+  // Parse Twitter's relative time (5m, 2h, 3d, Jan 15) into absolute timestamp
+  function parseTime(timeStr, now) {
+    if (!timeStr) return now;
+    timeStr = timeStr.trim();
+    // Match patterns like "5m", "2h", "3d"
+    var match = timeStr.match(/^(\d+)([smhd])$/);
+    if (match) {
+      var num = parseInt(match[1], 10);
+      var unit = match[2];
+      var ms = 0;
+      if (unit === 's') ms = num * 1000;
+      else if (unit === 'm') ms = num * 60000;
+      else if (unit === 'h') ms = num * 3600000;
+      else if (unit === 'd') ms = num * 86400000;
+      return now - ms;
+    }
+    // Try to parse as date (e.g., "Jan 15" or "Jan 15, 2024")
+    var parsed = Date.parse(timeStr);
+    if (!isNaN(parsed)) return parsed;
+    return now;
+  }
+
   var collector = setInterval(function() {
+    var now = Date.now();
     document.querySelectorAll('[data-testid="tweet"]').forEach(function(el) {
       try {
         var text = el.querySelector('[data-testid="tweetText"]');
@@ -57,7 +80,8 @@ cat > "$TEMP_JS" << JSEOF
         timeLink = timeLink ? timeLink.closest('a') : null;
         var tweetUrl = timeLink ? timeLink.href : '';
         var key = handle + text.slice(0, 50);
-        if (time && time.trim() !== '' && !T.has(key)) T.set(key, { name: name, handle: handle, time: time, text: text, imgs: imgs, links: links, tweetUrl: tweetUrl, ts: Date.now() });
+        var tweetTs = parseTime(time, now);
+        if (time && time.trim() !== '' && !T.has(key)) T.set(key, { name: name, handle: handle, time: time, text: text, imgs: imgs, links: links, tweetUrl: tweetUrl, ts: tweetTs });
       } catch(e) {}
     });
   }, 400);
