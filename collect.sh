@@ -238,10 +238,14 @@ FILTEREDEOF
             fi
         fi
 
-        # Sync to gist for mobile access
+        # Sync to gist for mobile access (use filtered data if available)
         GIST_ID="dc06a3ab6e0b1405bc67c0cc797e1613"
         echo "Syncing to gist..."
-        gh gist edit "$GIST_ID" -f collected.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+        if [ -f "$DATA_DIR/filtered.json" ] && [ "$FILTER" = true ]; then
+            gh gist edit "$GIST_ID" -f collected.json "$DATA_DIR/filtered.json" 2>/dev/null || echo "Gist sync failed (optional)"
+        else
+            gh gist edit "$GIST_ID" -f collected.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+        fi
 
         echo "Opening reader..."
         open "$DATA_DIR/loader.html"
