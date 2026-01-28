@@ -15,8 +15,13 @@
     <key>WorkingDirectory</key>
     <string>/Users/twelvehertz/Projects/twitter-digest</string>
 
-    <key>StartInterval</key>
-    <integer>3600</integer>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
 
     <key>StandardOutPath</key>
     <string>/Users/twelvehertz/Projects/twitter-digest/logs/collector.log</string>

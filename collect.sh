@@ -23,6 +23,32 @@ for arg in "$@"; do
     fi
 done
 
+# Check if Chrome is running and has a window
+CHROME_CHECK=$(osascript 2>/dev/null << 'CHECKEOF'
+tell application "System Events"
+    if not (exists process "Google Chrome") then
+        return "not_running"
+    end if
+end tell
+tell application "Google Chrome"
+    if (count of windows) is 0 then
+        return "no_windows"
+    end if
+    return "ok"
+end tell
+CHECKEOF
+)
+
+if [ "$CHROME_CHECK" = "not_running" ]; then
+    echo "Chrome not running, skipping collection"
+    exit 0
+fi
+
+if [ "$CHROME_CHECK" = "no_windows" ]; then
+    echo "Chrome has no windows, skipping collection"
+    exit 0
+fi
+
 echo "Twitter Collector"
 echo "================="
 echo "Target: $TARGET tweets"
