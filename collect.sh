@@ -164,15 +164,21 @@ POLLEOF
         COUNT=$(echo "$RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?")
         echo "Saved $COUNT tweets to $OUTPUT_PATH"
 
-        # Create loader HTML
+        # Create loader HTML that merges with existing
         cat > "$DATA_DIR/loader.html" << HTMLEOF
 <!DOCTYPE html>
 <html>
 <head><title>Loading...</title></head>
 <body>
 <script>
-const data = $RESULT;
-localStorage.setItem('tweets', JSON.stringify(data));
+const newData = $RESULT;
+const existing = JSON.parse(localStorage.getItem('tweets') || '[]');
+// Dedupe by handle + first 50 chars of text
+const existingKeys = new Set(existing.map(t => (t.handle || '') + (t.text || '').slice(0, 50)));
+const uniqueNew = newData.filter(t => !existingKeys.has((t.handle || '') + (t.text || '').slice(0, 50)));
+const merged = [...uniqueNew, ...existing];
+console.log('Merged:', uniqueNew.length, 'new +', existing.length, 'existing =', merged.length);
+localStorage.setItem('tweets', JSON.stringify(merged));
 window.location.href = 'reader.html';
 </script>
 </body>
@@ -193,15 +199,20 @@ HTMLEOF
                 FCOUNT=$(echo "$RESULT" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?")
                 echo "Filtered to $FCOUNT tweets"
 
-                # Update loader to use filtered data
+                # Update loader to use filtered data (merges with existing)
                 cat > "$DATA_DIR/loader.html" << FILTEREDEOF
 <!DOCTYPE html>
 <html>
 <head><title>Loading...</title></head>
 <body>
 <script>
-const data = $RESULT;
-localStorage.setItem('tweets', JSON.stringify(data));
+const newData = $RESULT;
+const existing = JSON.parse(localStorage.getItem('tweets') || '[]');
+const existingKeys = new Set(existing.map(t => (t.handle || '') + (t.text || '').slice(0, 50)));
+const uniqueNew = newData.filter(t => !existingKeys.has((t.handle || '') + (t.text || '').slice(0, 50)));
+const merged = [...uniqueNew, ...existing];
+console.log('Merged:', uniqueNew.length, 'new +', existing.length, 'existing =', merged.length);
+localStorage.setItem('tweets', JSON.stringify(merged));
 window.location.href = 'reader.html';
 </script>
 </body>

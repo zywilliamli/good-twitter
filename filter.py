@@ -104,6 +104,19 @@ def main():
     with open(INPUT_PATH) as f:
         tweets = json.load(f)
 
+    # Deduplicate by handle + first 50 chars
+    seen = set()
+    unique_tweets = []
+    for t in tweets:
+        key = (t.get('handle', '') or '') + (t.get('text', '') or '')[:50]
+        if key not in seen:
+            seen.add(key)
+            unique_tweets.append(t)
+
+    if len(unique_tweets) < len(tweets):
+        print(f"Deduplicated: {len(tweets)} -> {len(unique_tweets)} tweets")
+    tweets = unique_tweets
+
     print(f"Filtering {len(tweets)} tweets (5 parallel)...")
 
     # Prepare args for parallel processing

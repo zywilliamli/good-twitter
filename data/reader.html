@@ -482,10 +482,12 @@
       border-radius: 4px;
       overflow: hidden;
       border: 1px solid var(--dim-green);
+      max-width: 400px;
     }
 
     .media img {
       width: 100%;
+      max-width: 100%;
       display: block;
     }
 
@@ -594,6 +596,7 @@
       padding-left: 8px;
       border-left: 2px solid rgba(115, 89, 64, 0.2);
     }
+
   </style>
 </head>
 <body>
@@ -721,6 +724,18 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
         .replace(/@(\w+)/g, '<a href="https://x.com/$1" target="_blank">@$1</a>');
     }
 
+    function formatTime(ts) {
+      if (!ts) return '';
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (mins > 0) return `${mins}m ago`;
+      return 'just now';
+    }
+
     function renderTweet(t, isSkipped = false) {
       const imgs = (t.imgs || []).map(src =>
         `<div class="media"><img src="${src}" loading="lazy"></div>`
@@ -741,27 +756,9 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
         ? `<a href="${t.tweetUrl}" target="_blank" class="tweet-link">OPEN</a>`
         : '';
 
-      const quality = t._quality;
-      const topic = t._topic;
-      const summary = t._summary;
-
-      const qualityBadge = quality
-        ? `<span class="quality-badge ${quality}">${quality}</span>`
-        : '';
-
-      const topicTag = topic
-        ? `<span class="topic-tag">${topic}</span>`
-        : '';
-
-      const summaryHtml = summary
-        ? `<div class="summary">${summary}</div>`
-        : '';
-
       if (isSkipped) {
-        const skipReason = t._skip_reason || 'filtered';
         return `
           <div class="skipped-tweet">
-            <span class="skip-reason">${skipReason}</span>
             <div class="tweet-header">
               <span class="name">${t.name || 'Unknown'}</span>
               <span class="handle">${t.handle || ''}</span>
@@ -778,13 +775,10 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
           <div class="tweet-header">
             <span class="name">${t.name || 'Unknown'}</span>
             <span class="handle">${t.handle || ''}</span>
-            <span class="time">${t.time || ''}</span>
-            ${qualityBadge}
-            ${topicTag}
+            <span class="time">${formatTime(t.ts)}</span>
             ${tweetLinkHtml}
           </div>
           <div class="text">${linkify(t.text || '')}</div>
-          ${summaryHtml}
           ${imgs}
           ${linksHtml}
         </div>
@@ -811,9 +805,27 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       }
     }
 
-    function loadTweets(tweets) {
-      // Filter out ads (no timestamp) and sort by collection order
+    function loadTweets(tweets, merge = false) {
+      // Filter out ads (no timestamp)
       tweets = tweets.filter(t => t.time && t.time.trim() !== '');
+
+      // Merge with existing if requested
+      if (merge && allTweets.length > 0) {
+        const existingKeys = new Set(allTweets.map(t => (t.handle || '') + (t.text || '').slice(0, 50)));
+        const newTweets = tweets.filter(t => {
+          const key = (t.handle || '') + (t.text || '').slice(0, 50);
+          return !existingKeys.has(key);
+        });
+        console.log(`Merging: ${newTweets.length} new tweets, ${allTweets.length} existing`);
+        // Combine: new tweets (with filter data) + existing tweets (preserve filter data)
+        const existingWithFilter = JSON.parse(localStorage.getItem('tweets') || '[]');
+        tweets = [...tweets, ...existingWithFilter.filter(t => {
+          const key = (t.handle || '') + (t.text || '').slice(0, 50);
+          return !new Set(tweets.map(tt => (tt.handle || '') + (tt.text || '').slice(0, 50))).has(key);
+        })];
+      }
+
+      // Sort by collection order
       tweets.sort((a, b) => (a.ts || 0) - (b.ts || 0));
 
       // Store raw tweets for re-filtering
@@ -1031,13 +1043,13 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       } catch(e) {}
     }
 
-    // Paste handler
+    // Paste handler - merges with existing tweets
     document.addEventListener('paste', (e) => {
       const text = e.clipboardData.getData('text');
       try {
         const tweets = JSON.parse(text);
         if (Array.isArray(tweets) && tweets.length > 0) {
-          loadTweets(tweets);
+          loadTweets(tweets, true);  // merge=true
         }
       } catch(e) {
         console.error('Failed to parse:', e);
