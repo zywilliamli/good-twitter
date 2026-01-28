@@ -930,16 +930,15 @@
       <div class="header">
         <div>
           <h1>> Tweets <span class="cursor"></span></h1>
-          <div class="stats" id="stats">NO RECORDS LOADED</div>
         </div>
         <div class="header-btns">
           <div class="feed-tabs hidden" id="feed-tabs">
             <button class="feed-tab active" id="good-tab">[+]</button>
             <button class="feed-tab slop" id="slop-tab">[-]</button>
           </div>
-          <button class="header-btn" id="sync-btn">Sync</button>
-          <button class="header-btn" id="prompt-btn">Prompt</button>
-          <button class="header-btn" id="settings-btn">Settings</button>
+          <button class="header-btn icon-btn" id="sync-btn">⟳</button>
+          <button class="header-btn icon-btn" id="prompt-btn">✎</button>
+          <button class="header-btn icon-btn" id="settings-btn">⚙</button>
         </div>
       </div>
       <div id="feed">
@@ -1080,7 +1079,6 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
 
     function updateDisplay() {
       const feed = document.getElementById('feed');
-      const stats = document.getElementById('stats');
       const feedTabs = document.getElementById('feed-tabs');
       const goodTab = document.getElementById('good-tab');
       const slopTab = document.getElementById('slop-tab');
@@ -1097,12 +1095,10 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       // Display based on active tab
       if (activeTab === 'good') {
         feed.innerHTML = keptTweets.map(t => renderTweet(t, false)).join('');
-        stats.textContent = `${keptTweets.length} RECORDS LOADED`;
         goodTab.classList.add('active');
         slopTab.classList.remove('active');
       } else {
         feed.innerHTML = skippedTweets.map(t => renderTweet(t, true)).join('');
-        stats.textContent = `${skippedTweets.length} SLOP`;
         goodTab.classList.remove('active');
         slopTab.classList.add('active');
       }
@@ -1412,7 +1408,7 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
     syncBtn.addEventListener('click', async () => {
       const config = getSyncConfig();
       const btn = syncBtn;
-      btn.textContent = 'Syncing...';
+      btn.textContent = '...';
       btn.disabled = true;
       try {
         const res = await fetch(`https://gist.githubusercontent.com/${config.GITHUB_USERNAME}/${config.GIST_ID}/raw/collected.json?t=${Date.now()}`);
@@ -1422,16 +1418,16 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
           const beforeCount = keptTweets.length;
           loadTweets(tweets, true);
           const newCount = keptTweets.length - beforeCount;
-          btn.textContent = newCount > 0 ? `+${newCount} new` : 'Up to date';
+          btn.textContent = newCount > 0 ? `+${newCount}` : '✓';
         } else {
-          btn.textContent = 'No tweets';
+          btn.textContent = '∅';
         }
       } catch(e) {
         console.error('Sync failed:', e);
-        btn.textContent = 'Sync failed';
+        btn.textContent = '✗';
       }
       setTimeout(() => {
-        btn.textContent = 'Sync';
+        btn.textContent = '⟳';
         btn.disabled = false;
       }, 2000);
     });
