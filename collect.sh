@@ -23,6 +23,13 @@ for arg in "$@"; do
     fi
 done
 
+# Random delay (0-15 minutes) to avoid detection patterns
+if [ -n "$RANDOM_DELAY" ] || [ "$1" = "--scheduled" ]; then
+    DELAY=$((RANDOM % 900))
+    echo "Waiting ${DELAY}s before collection..."
+    sleep $DELAY
+fi
+
 # Check if Chrome is running and has a window
 CHROME_CHECK=$(osascript 2>/dev/null << 'CHECKEOF'
 tell application "System Events"
