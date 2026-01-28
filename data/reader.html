@@ -490,19 +490,22 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      right: 0;
+      bottom: 0;
       background: rgba(0,0,0,0.3);
       z-index: 450;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s;
+      display: none;
       -webkit-tap-highlight-color: transparent;
+      touch-action: none;
     }
 
     .overlay.visible {
-      opacity: 1;
-      visibility: visible;
+      display: block;
+    }
+
+    /* Disable feed interaction when panel is open */
+    body.panel-open .feed-container {
+      pointer-events: none;
     }
 
     .tweet {
@@ -1292,25 +1295,19 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       skippedPanel.classList.remove('open');
       settingsPanel.classList.remove('open');
       overlay.classList.remove('visible');
+      document.body.classList.remove('panel-open');
     }
 
-    promptBtn.addEventListener('click', () => {
+    function openPanel(panel) {
       closeAllPanels();
-      promptPanel.classList.add('open');
+      panel.classList.add('open');
       overlay.classList.add('visible');
-    });
+      document.body.classList.add('panel-open');
+    }
 
-    skippedBtn.addEventListener('click', () => {
-      closeAllPanels();
-      skippedPanel.classList.add('open');
-      overlay.classList.add('visible');
-    });
-
-    settingsBtn.addEventListener('click', () => {
-      closeAllPanels();
-      settingsPanel.classList.add('open');
-      overlay.classList.add('visible');
-    });
+    promptBtn.addEventListener('click', () => openPanel(promptPanel));
+    skippedBtn.addEventListener('click', () => openPanel(skippedPanel));
+    settingsBtn.addEventListener('click', () => openPanel(settingsPanel));
 
     closePrompt.addEventListener('click', closeAllPanels);
     closeSkipped.addEventListener('click', closeAllPanels);
