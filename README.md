@@ -1,4 +1,4 @@
-# Twitter Digest
+# Good Tweets
 
 A tool to collect tweets from your Twitter/X feed and filter them using Claude Haiku to remove slop
 
@@ -13,7 +13,7 @@ A tool to collect tweets from your Twitter/X feed and filter them using Claude H
 
 1. Clone the repository and navigate to the directory:
    ```bash
-   cd twitter-digest
+   cd good-twitter
    ```
 
 2. Create a virtual environment and install dependencies:
