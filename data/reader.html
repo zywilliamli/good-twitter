@@ -1384,8 +1384,10 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
         if (!res.ok) throw new Error('Failed to fetch');
         const tweets = await res.json();
         if (Array.isArray(tweets) && tweets.length > 0) {
+          const beforeCount = keptTweets.length;
           loadTweets(tweets, true);
-          btn.textContent = `Synced ${tweets.length}`;
+          const newCount = keptTweets.length - beforeCount;
+          btn.textContent = newCount > 0 ? `+${newCount} new` : 'Up to date';
         } else {
           btn.textContent = 'No tweets';
         }
