@@ -1,6 +1,6 @@
 # Twitter Digest
 
-A tool to collect tweets from your Twitter/X feed and filter them using Claude AI to surface quality technical content.
+A tool to collect tweets from your Twitter/X feed and filter them using Claude Haiku to remove slop
 
 ## Requirements
 
