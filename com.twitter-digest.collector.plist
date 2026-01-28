@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.twitter-digest.collector</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/twelvehertz/Projects/twitter-digest/collect.sh</string>
+        <string>100</string>
+        <string>-f</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/twelvehertz/Projects/twitter-digest</string>
+
+    <key>StartInterval</key>
+    <integer>3600</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/twelvehertz/Projects/twitter-digest/logs/collector.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/twelvehertz/Projects/twitter-digest/logs/collector.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+    </dict>
+</dict>
+</plist>

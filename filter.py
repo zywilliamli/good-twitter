@@ -104,6 +104,32 @@ def main():
     with open(INPUT_PATH) as f:
         tweets = json.load(f)
 
+    # Load existing filtered data to preserve classifications
+    existing_classifications = {}
+    if OUTPUT_PATH.exists():
+        try:
+            with open(OUTPUT_PATH) as f:
+                existing = json.load(f)
+                for t in existing:
+                    if '_skip' in t:
+                        key = (t.get('handle') or '') + (t.get('text') or '')[:50]
+                        existing_classifications[key] = {
+                            '_skip': t.get('_skip'),
+                            '_skip_reason': t.get('_skip_reason'),
+                            '_quality': t.get('_quality'),
+                            '_topic': t.get('_topic'),
+                            '_summary': t.get('_summary'),
+                        }
+            print(f"Loaded {len(existing_classifications)} existing classifications")
+        except Exception as e:
+            print(f"Could not load existing classifications: {e}")
+
+    # Apply existing classifications to tweets
+    for t in tweets:
+        key = (t.get('handle') or '') + (t.get('text') or '')[:50]
+        if key in existing_classifications and '_skip' not in t:
+            t.update(existing_classifications[key])
+
     # Deduplicate by handle + first 50 chars
     seen = set()
     unique_tweets = []
@@ -117,13 +143,28 @@ def main():
         print(f"Deduplicated: {len(tweets)} -> {len(unique_tweets)} tweets")
     tweets = unique_tweets
 
-    print(f"Filtering {len(tweets)} tweets (5 parallel)...")
+    # Separate already-classified tweets from new ones
+    already_classified = [t for t in tweets if '_skip' in t]
+    needs_classification = [t for t in tweets if '_skip' not in t]
 
-    # Prepare args for parallel processing
-    args_list = [(client, tweet, i, len(tweets)) for i, tweet in enumerate(tweets)]
+    print(f"Found {len(already_classified)} already classified, {len(needs_classification)} new tweets")
 
-    # Process in parallel with 10 workers
-    results = [None] * len(tweets)
+    if not needs_classification:
+        print("No new tweets to classify!")
+        # Still output the file with existing classifications
+        with open(OUTPUT_PATH, 'w') as f:
+            json.dump(tweets, f, indent=2)
+        kept_count = len([t for t in tweets if not t.get('_skip', False)])
+        print(f"Total: {kept_count}/{len(tweets)} kept")
+        return
+
+    print(f"Filtering {len(needs_classification)} new tweets (5 parallel)...")
+
+    # Prepare args for parallel processing (only new tweets)
+    args_list = [(client, tweet, i, len(needs_classification)) for i, tweet in enumerate(needs_classification)]
+
+    # Process in parallel with 5 workers
+    new_results = [None] * len(needs_classification)
     kept_count = 0
     completed = 0
 
@@ -132,20 +173,29 @@ def main():
 
         for future in as_completed(futures):
             index, tweet, skip, quality, handle = future.result()
-            results[index] = tweet
+            new_results[index] = tweet
             completed += 1
 
             status = 'SKIP' if skip else 'KEEP'
-            print(f"[{completed}/{len(tweets)}] {status} | {quality:6} | @{handle}")
+            print(f"[{completed}/{len(needs_classification)}] {status} | {quality:6} | @{handle}")
 
             if not skip:
                 kept_count += 1
 
-    # Save all tweets with classification data (reader will separate kept/skipped)
-    with open(OUTPUT_PATH, 'w') as f:
-        json.dump(results, f, indent=2)
+    # Combine: newly classified + already classified
+    all_results = new_results + already_classified
 
-    print(f"\nDone! Kept {kept_count}/{len(tweets)} tweets")
+    # Sort by timestamp (newest first)
+    all_results.sort(key=lambda t: t.get('ts', 0), reverse=True)
+
+    # Save all tweets with classification data
+    with open(OUTPUT_PATH, 'w') as f:
+        json.dump(all_results, f, indent=2)
+
+    total_kept = len([t for t in all_results if not t.get('_skip', False)])
+
+    print(f"\nDone! Classified {kept_count}/{len(needs_classification)} new tweets as kept")
+    print(f"Total: {total_kept}/{len(all_results)} kept")
     print(f"Saved to {OUTPUT_PATH}")
 
 
