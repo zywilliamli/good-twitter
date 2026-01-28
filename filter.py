@@ -16,6 +16,7 @@ from anthropic import Anthropic, RateLimitError
 DATA_DIR = Path(__file__).parent / "data"
 INPUT_PATH = DATA_DIR / "collected.json"
 OUTPUT_PATH = DATA_DIR / "filtered.json"
+CONFIG_PATH = Path(__file__).parent / "config.sh"
 
 CLASSIFICATION_PROMPT = """Classify this tweet for a technical reader. Return JSON only.
 
@@ -104,25 +105,59 @@ def main():
     with open(INPUT_PATH) as f:
         tweets = json.load(f)
 
-    # Load existing filtered data to preserve classifications
+    # Load existing classifications from multiple sources
     existing_classifications = {}
+
+    def add_classifications(tweets_list, source_name):
+        count = 0
+        for t in tweets_list:
+            if '_skip' in t:
+                key = (t.get('handle') or '') + (t.get('text') or '')[:50]
+                if key not in existing_classifications:
+                    existing_classifications[key] = {
+                        '_skip': t.get('_skip'),
+                        '_skip_reason': t.get('_skip_reason'),
+                        '_quality': t.get('_quality'),
+                        '_topic': t.get('_topic'),
+                        '_summary': t.get('_summary'),
+                    }
+                    count += 1
+        if count > 0:
+            print(f"Loaded {count} classifications from {source_name}")
+
+    # 1. Load from local filtered.json
     if OUTPUT_PATH.exists():
         try:
             with open(OUTPUT_PATH) as f:
-                existing = json.load(f)
-                for t in existing:
-                    if '_skip' in t:
-                        key = (t.get('handle') or '') + (t.get('text') or '')[:50]
-                        existing_classifications[key] = {
-                            '_skip': t.get('_skip'),
-                            '_skip_reason': t.get('_skip_reason'),
-                            '_quality': t.get('_quality'),
-                            '_topic': t.get('_topic'),
-                            '_summary': t.get('_summary'),
-                        }
-            print(f"Loaded {len(existing_classifications)} existing classifications")
+                add_classifications(json.load(f), "filtered.json")
         except Exception as e:
-            print(f"Could not load existing classifications: {e}")
+            print(f"Could not load filtered.json: {e}")
+
+    # 2. Also fetch from gist (the accumulated source of truth)
+    gist_id = None
+    github_username = None
+    if CONFIG_PATH.exists():
+        try:
+            with open(CONFIG_PATH) as f:
+                for line in f:
+                    if line.startswith('GIST_ID='):
+                        gist_id = line.split('=', 1)[1].strip().strip('"\'')
+                    elif line.startswith('GITHUB_USERNAME='):
+                        github_username = line.split('=', 1)[1].strip().strip('"\'')
+        except:
+            pass
+
+    if gist_id and github_username:
+        try:
+            import urllib.request
+            gist_url = f"https://gist.githubusercontent.com/{github_username}/{gist_id}/raw/collected.json"
+            with urllib.request.urlopen(gist_url, timeout=10) as resp:
+                gist_data = json.loads(resp.read().decode())
+                add_classifications(gist_data, "gist")
+        except Exception as e:
+            print(f"Could not fetch gist: {e}")
+
+    print(f"Total existing classifications: {len(existing_classifications)}")
 
     # Apply existing classifications to tweets
     for t in tweets:
