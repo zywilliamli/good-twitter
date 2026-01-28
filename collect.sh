@@ -30,7 +30,9 @@ echo ""
 TEMP_JS="$DATA_DIR/_collector.js"
 cat > "$TEMP_JS" << JSEOF
 (function() {
-  if (window._collectorRunning) return;
+  // Reset any stale state from previous runs
+  window._collectorRunning = false;
+  window._collectedData = null;
   window._collectorRunning = true;
   window.T = new Map();
   var TARGET = ${TARGET};
@@ -39,8 +41,8 @@ cat > "$TEMP_JS" << JSEOF
   function parseTime(timeStr, now) {
     if (!timeStr) return now;
     timeStr = timeStr.trim();
-    // Match patterns like "5m", "2h", "3d"
-    var match = timeStr.match(/^(\d+)([smhd])$/);
+    // Match patterns like "5m", "2h", "3d" - using [0-9] instead of backslash-d for escaping safety
+    var match = timeStr.match(/^([0-9]+)([smhd])$/);
     if (match) {
       var num = parseInt(match[1], 10);
       var unit = match[2];
@@ -101,17 +103,8 @@ cat > "$TEMP_JS" << JSEOF
 })();
 JSEOF
 
-# Use Python to properly escape for AppleScript (handles all edge cases)
-JS_CODE=$(python3 -c "
-import sys
-with open('$TEMP_JS', 'r') as f:
-    code = f.read()
-# Escape backslashes and quotes for AppleScript string
-code = code.replace('\\\\', '\\\\\\\\').replace('\"', '\\\\\"')
-# Replace newlines with spaces
-code = ' '.join(code.split())
-print(code)
-")
+# Base64 encode the JS to safely pass through shell/AppleScript
+JS_B64=$(base64 < "$TEMP_JS" | tr -d '\n')
 
 # AppleScript to control Chrome
 osascript << ASEOF
@@ -146,9 +139,9 @@ tell application "Google Chrome"
 
     delay 3
 
-    -- Inject collector script
+    -- Inject collector script via base64 decode
     tell active tab of window 1
-        execute javascript "${JS_CODE}"
+        execute javascript "eval(atob('${JS_B64}'))"
     end tell
 
 end tell
@@ -248,7 +241,7 @@ FILTEREDEOF
         # Sync to gist for mobile access
         GIST_ID="dc06a3ab6e0b1405bc67c0cc797e1613"
         echo "Syncing to gist..."
-        gh gist edit "$GIST_ID" -f tweets.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
+        gh gist edit "$GIST_ID" -f collected.json "$OUTPUT_PATH" 2>/dev/null || echo "Gist sync failed (optional)"
 
         echo "Opening reader..."
         open "$DATA_DIR/loader.html"

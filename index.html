@@ -1043,7 +1043,7 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       btn.textContent = 'Syncing...';
       btn.disabled = true;
       try {
-        const res = await fetch(`https://gist.githubusercontent.com/zywilliamli/${GIST_ID}/raw/tweets.json?t=${Date.now()}`);
+        const res = await fetch(`https://gist.githubusercontent.com/zywilliamli/${GIST_ID}/raw/collected.json?t=${Date.now()}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const tweets = await res.json();
         if (Array.isArray(tweets) && tweets.length > 0) {
