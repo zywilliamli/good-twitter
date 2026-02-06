@@ -347,126 +347,6 @@
       text-align: center;
     }
 
-    /* Settings panel */
-    .settings-panel {
-      position: fixed;
-      top: 0;
-      left: -480px;
-      width: 460px;
-      height: 100vh;
-      background: var(--bg);
-      border-right: 2px solid var(--dim-green);
-      z-index: 500;
-      transition: left 0.3s ease;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .settings-panel.open {
-      left: 0;
-    }
-
-    .settings-header {
-      padding: 16px;
-      border-bottom: 1px solid var(--dim-green);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .settings-header h2 {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--amber);
-    }
-
-    .settings-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      overflow-y: auto;
-    }
-
-    .settings-section {
-      margin-bottom: 20px;
-    }
-
-    .settings-section h3 {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--dim-green);
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(115, 89, 64, 0.2);
-    }
-
-    .settings-field {
-      margin-bottom: 12px;
-    }
-
-    .settings-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--dim-green);
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .settings-input {
-      width: 100%;
-      background: rgba(115, 89, 64, 0.08);
-      border: 1px solid var(--dim-green);
-      color: var(--green);
-      font-family: inherit;
-      font-size: 12px;
-      padding: 8px 12px;
-      border-radius: 2px;
-    }
-
-    .settings-input:focus {
-      outline: none;
-      border-color: var(--cyan);
-    }
-
-    .settings-help {
-      font-size: 10px;
-      color: var(--dim-green);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-
-    .settings-actions {
-      margin-top: 16px;
-      display: flex;
-      gap: 8px;
-    }
-
-    .save-btn {
-      flex: 1;
-      background: var(--cyan);
-      color: var(--bg);
-      border: none;
-      padding: 10px 16px;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      border-radius: 2px;
-      transition: all 0.2s;
-    }
-
-    .save-btn:hover {
-      background: var(--amber);
-    }
-
     .close-btn {
       background: none;
       border: 1px solid var(--dim-green);
@@ -839,13 +719,9 @@
       }
 
       /* Panels go full width on mobile */
-      .prompt-panel, .settings-panel {
+      .prompt-panel {
         width: 100%;
         left: -100%;
-      }
-
-      .settings-panel.open {
-        left: 0;
       }
 
       .prompt-panel.open {
@@ -875,34 +751,6 @@
 </head>
 <body>
   <div class="overlay" id="overlay"></div>
-
-  <!-- Settings panel -->
-  <div class="settings-panel" id="settings-panel">
-    <div class="settings-header">
-      <h2>> Settings</h2>
-      <button class="close-btn" id="close-settings">&times;</button>
-    </div>
-    <div class="settings-content">
-      <div class="settings-section">
-        <h3>Mobile Sync (Optional)</h3>
-        <p class="settings-help" style="margin-bottom: 12px;">
-          To sync tweets to your phone, create a <a href="https://gist.github.com" target="_blank" style="color:var(--cyan)">secret GitHub Gist</a> and enter the details below.
-        </p>
-        <div class="settings-field">
-          <label class="settings-label">GitHub Username</label>
-          <input type="text" class="settings-input" id="settings-username" placeholder="your-username">
-        </div>
-        <div class="settings-field">
-          <label class="settings-label">Gist ID</label>
-          <input type="text" class="settings-input" id="settings-gist-id" placeholder="abc123...">
-          <p class="settings-help">The ID from your gist URL: gist.github.com/username/<strong>THIS_PART</strong></p>
-        </div>
-      </div>
-      <div class="settings-actions">
-        <button class="save-btn" id="save-settings">Save Settings</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Left panel - Prompt Editor -->
   <div class="prompt-panel" id="prompt-panel">
@@ -946,7 +794,6 @@
           </div>
           <button class="header-btn icon-btn" id="sync-btn">⟳</button>
           <button class="header-btn icon-btn" id="prompt-btn">✎</button>
-          <button class="header-btn icon-btn" id="settings-btn">⚙</button>
         </div>
       </div>
       <div id="feed">
@@ -1304,14 +1151,10 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
     const promptBtn = document.getElementById('prompt-btn');
     const promptPanel = document.getElementById('prompt-panel');
     const closePrompt = document.getElementById('close-prompt');
-    const settingsBtn = document.getElementById('settings-btn');
-    const settingsPanel = document.getElementById('settings-panel');
-    const closeSettings = document.getElementById('close-settings');
     const overlay = document.getElementById('overlay');
 
     function closeAllPanels() {
       promptPanel.classList.remove('open');
-      settingsPanel.classList.remove('open');
       overlay.classList.remove('visible');
       document.body.classList.remove('panel-open');
     }
@@ -1324,10 +1167,8 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
     }
 
     promptBtn.addEventListener('click', () => openPanel(promptPanel));
-    settingsBtn.addEventListener('click', () => openPanel(settingsPanel));
 
     closePrompt.addEventListener('click', closeAllPanels);
-    closeSettings.addEventListener('click', closeAllPanels);
 
     // Tab switching
     document.getElementById('good-tab').addEventListener('click', () => {
@@ -1361,44 +1202,14 @@ Return ONLY valid JSON: {"skip": bool, "skip_reason": "reason if skipping", "qua
       localStorage.setItem('filterPrompt', DEFAULT_PROMPT);
     });
 
-    // Get sync config (localStorage overrides file config)
+    // Get sync config from URL params
     function getSyncConfig() {
-      const fileConfig = window.TWITTER_DIGEST_CONFIG || {};
+      const params = new URLSearchParams(window.location.search);
       return {
-        GITHUB_USERNAME: localStorage.getItem('syncUsername') || fileConfig.GITHUB_USERNAME || '',
-        GIST_ID: localStorage.getItem('syncGistId') || fileConfig.GIST_ID || ''
+        GITHUB_USERNAME: params.get('user') || '',
+        GIST_ID: params.get('gist') || ''
       };
     }
-
-    // Settings panel
-    const settingsUsername = document.getElementById('settings-username');
-    const settingsGistId = document.getElementById('settings-gist-id');
-    const saveSettingsBtn = document.getElementById('save-settings');
-
-    // Load saved settings
-    const syncConfig = getSyncConfig();
-    settingsUsername.value = syncConfig.GITHUB_USERNAME;
-    settingsGistId.value = syncConfig.GIST_ID;
-
-    saveSettingsBtn.addEventListener('click', () => {
-      const username = settingsUsername.value.trim();
-      const gistId = settingsGistId.value.trim();
-
-      if (username) localStorage.setItem('syncUsername', username);
-      else localStorage.removeItem('syncUsername');
-
-      if (gistId) localStorage.setItem('syncGistId', gistId);
-      else localStorage.removeItem('syncGistId');
-
-      // Update sync button visibility
-      updateSyncButton();
-
-      saveSettingsBtn.textContent = 'Saved!';
-      setTimeout(() => {
-        saveSettingsBtn.textContent = 'Save Settings';
-        closeAllPanels();
-      }, 1000);
-    });
 
     // Sync from gist
     const syncBtn = document.getElementById('sync-btn');
