@@ -302,7 +302,8 @@ FILTEREDEOF
 
             # Fetch existing gist data and merge
             GIST_URL="https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/collected.json"
-            EXISTING_DATA=$(curl -s "$GIST_URL" 2>/dev/null || echo "[]")
+            EXISTING_FILE="$DATA_DIR/_existing_gist.json"
+            curl -s "$GIST_URL" -o "$EXISTING_FILE" 2>/dev/null || echo "[]" > "$EXISTING_FILE"
 
             # Merge using Python (dedup by handle + text[:50])
             MERGED_FILE="$DATA_DIR/_merged_gist.json"
@@ -311,13 +312,14 @@ import json
 import sys
 
 try:
-    with open('$LOCAL_DATA') as f:
+    with open('$LOCAL_DATA', encoding='utf-8') as f:
         new_tweets = json.load(f)
 except:
     new_tweets = []
 
 try:
-    existing = json.loads('''$EXISTING_DATA''')
+    with open('$EXISTING_FILE', encoding='utf-8', errors='ignore') as f:
+        existing = json.load(f)
     if not isinstance(existing, list):
         existing = []
 except:
@@ -349,8 +351,12 @@ print(f"Merged: {len(new_tweets)} new + {len(existing)} existing = {len(merged)}
 PYEOF
 
             # Upload merged data
-            gh gist edit "$GIST_ID" -f collected.json "$MERGED_FILE" 2>/dev/null || echo "Gist sync failed (optional)"
-            rm -f "$MERGED_FILE"
+            if gh gist edit "$GIST_ID" -f collected.json "$MERGED_FILE" 2>&1 | tee -a "$DATA_DIR/_gist_sync.log"; then
+                echo "Gist sync successful"
+            else
+                echo "Gist sync failed - check $DATA_DIR/_gist_sync.log"
+            fi
+            rm -f "$MERGED_FILE" "$EXISTING_FILE"
         fi
 
         # Only open reader if not running scheduled (avoid interrupting user)
